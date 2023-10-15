@@ -22,4 +22,4 @@ jobs:
         run: |
           curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s - -y --default-toolchain `cat ./lean-toolchain`
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
-      - run: lake build
+      - run: lake exe cache get && lake build

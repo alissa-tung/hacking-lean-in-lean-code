@@ -1,2 +1,6 @@
+import HackingLeanInLeanSrc.PartI.Transformations
+import HackingLeanInLeanSrc.PartI.BasicFp
+import HackingLeanInLeanSrc.PartI.Bind
+
 import HackingLeanInLeanSrc.PartII.Exact
 import HackingLeanInLeanSrc.Solutions.PartII.Exact
