@@ -18,12 +18,12 @@ def add_succ (m n : ℕ) : .succ (add m n) = add m (.succ n) :=
   | .zero   => rfl
   | .succ m => congr_arg ℕ.succ $ add_succ m n
 
-def add_comm (m n : ℕ) : add m n = add n m :=
-  match m with
-  | .zero   => add_identity n
-  | .succ m => Eq.trans
-      (congr_arg ℕ.succ $ add_comm m n)
-      (add_succ n m)
+-- def add_comm (m n : ℕ) : add m n = add n m :=
+--   match m with
+--   | .zero   => add_identity n
+--   | .succ m => Eq.trans
+--       (congr_arg ℕ.succ $ add_comm m n)
+--       (add_succ n m)
 
 variable {A B : Type}
 
