@@ -65,6 +65,7 @@ def four : Expr :=
 elab "four" : term => return four
 #check four -- fun a b c => Nat.add (Nat.mul b a) c : Nat → Nat → Nat → Nat
 #reduce four 666 1 2 -- 668
+#eval four 666 1 2
 
 def eight : Expr :=
   Expr.forallE `notUsed
@@ -81,3 +82,5 @@ def exampleLet := Expr.letE `x (.const `Nat []) (.lit (.natVal 2)) (.app (.const
 elab "exampleLet" : term => return exampleLet
 #check exampleLet
 #reduce exampleLet
+
+#check Lean.Meta.isDefEq
