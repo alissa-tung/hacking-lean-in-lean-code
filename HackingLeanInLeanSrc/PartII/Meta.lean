@@ -7,6 +7,8 @@ example {α} (a : α) (f : α → α) (h : ∀ a, f a = a) : f (f a) = a := by
   apply h
   apply h
 
+-- def  : Meta Unit :=
+
 #eval show MetaM Unit from do
   -- Create two fresh metavariables of type `Nat`.
   let mvar1 ← mkFreshExprMVar (Expr.const ``Nat []) (userName := `mvar1)
@@ -18,6 +20,7 @@ example {α} (a : α) (f : α → α) (h : ∀ a, f a = a) : f (f a) = a := by
 
   -- Define a helper function that prints each metavariable.
   let printMVars : MetaM Unit := do
+    pure 4 >>= fun x => IO.println s!"{x}"
     IO.println s!"  meta1: {← instantiateMVars mvar1}"
     IO.println s!"  meta2: {← instantiateMVars mvar2}"
     IO.println s!"  meta3: {← instantiateMVars mvar3}"

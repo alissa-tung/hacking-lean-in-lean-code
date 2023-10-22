@@ -11,7 +11,7 @@ syntax (name := exact') "exact' " term : tactic
 @[tactic exact']
 def evalExact' : Tactic := fun stx =>
   match stx with
-  | `(tactic| exact' $e) =>
+  | `(tactic| exact' $e:term) =>
     closeMainGoalUsing (checkUnassigned := false)
       fun type => do
         let mvarCounterSaved := (← getMCtx).mvarCounter

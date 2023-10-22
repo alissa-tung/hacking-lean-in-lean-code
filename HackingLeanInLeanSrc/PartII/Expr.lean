@@ -3,8 +3,9 @@ import Lean
 open Lean Meta
 
 -- 1 + 2
+-- ((· + ·) 1) 2
 def one : Expr :=
-  Expr.app (Expr.app (Expr.const `Nat.add []) (mkNatLit 1)) (mkNatLit 2)
+  Expr.app (Expr.app (Expr.const ``Nat.add []) (mkNatLit 1)) (mkNatLit 2)
 
 elab "one" : term => return one
 #check one  -- Nat.add 1 2 : Nat
@@ -84,3 +85,6 @@ elab "exampleLet" : term => return exampleLet
 #reduce exampleLet
 
 #check Lean.Meta.isDefEq
+
+#check PUnit
+#check Unit
