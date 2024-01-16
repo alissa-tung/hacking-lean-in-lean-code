@@ -1,0 +1,180 @@
+import Init.Prelude
+
+#check congrArg
+
+inductive ℕ where
+  | zero : ℕ
+  -- | succ : ℕ → ℕ
+  | succ (n : ℕ) : ℕ
+  deriving Repr
+
+def add (m n : ℕ) : ℕ :=
+  match m with
+  | .zero   => n
+  | .succ m => .succ <| add m n
+
+-- n = add n ℕ.zero
+
+def add_zero : ∀ n : ℕ, add n .zero = n :=
+  fun n =>
+    match n with
+    | .zero   => rfl
+    | .succ n => congrArg ℕ.succ $ add_zero n
+
+-- add (ℕ.succ n) ℕ.zero = ℕ.succ n
+-- succ (add n zero) = succ n
+-- x = y -> f x = f y
+
+
+-- add zero     n := n
+-- add (succ m) n := succ (add m n)
+
+def add_ (m : ℕ) (n : ℕ) : ℕ :=
+  match m with
+  | .zero   => n
+  | .succ m => .succ <| add m n
+
+def add__ : ℕ → ℕ → ℕ
+  | .zero  , n => n
+  | .succ m, n => .succ (add__ m n)
+
+def id' {A : Type _} : A → A := by
+  intro x
+  exact x
+
+-- fun x => x
+
+def const {A : Type _} : A → A → A := by
+  intros x _y
+  exact x
+
+def const' {A : Type _} : A → A → A :=
+  fun x _ => x
+
+-- term
+-- command
+-- tactics
+
+-- def add (m n : ℕ) : ℕ :=
+--   match m with
+--   | .zero   => n
+--   | .succ m => .succ <| add m n
+
+def add_assoc : ∀ m n p,
+  -- (m + n) + p = m + (n + p)
+  (add (add m n) p) = (add m (add n p)) :=
+    fun m n p =>
+      match m with
+      | .zero   => rfl
+      -- | .succ m => congrArg (a₁ := add (add m n) p) (f := ℕ.succ) (h := add_assoc m n p)
+      | .succ m => congrArg ℕ.succ $ add_assoc m n p
+
+#check congrArg
+
+def add_comm : ∀ m n,
+  add m n = add n m :=
+    fun m n =>
+      match m with
+      | .zero   => Eq.symm <| by    --  Eq.symm (add_zero n)
+          apply add_zero
+      | .succ m => sorry
+
+
+-- add (ℕ.succ m) n = add n (ℕ.succ m)
+-- ℕ.succ (add m n) = add n (ℕ.succ m)
+
+
+
+-- add ℕ.zero n = add n ℕ.zero
+-- n = add n ℕ.zero
+
+
+-- q := (add n p)
+
+-- add zero q
+-- q
+-- add (add ℕ.zero n) p = add ℕ.zero (add n p)
+-- add n p = add ℕ.zero (add n p)
+-- add n p = add ℕ.zero (add n p)
+-- add n p = add n p
+
+-- add (add (ℕ.succ m) n) p = add (ℕ.succ m) (add n p)
+-- add (ℕ.succ (add m n)) p = add (ℕ.succ m) (add n p)
+-- add (ℕ.succ (add m n)) p = ℕ.succ (add m (add n p))
+-- ℕ.succ (add (add m n) p) = ℕ.succ (add m (add n p))
+-- ℕ.succ (add (add m n) p) = ℕ.succ (add m (add n p))
+-- add (add m n) p = add m (add n p)
+-- x = y -> f x = f y
+
+#check congrArg
+
+def add___ : ∀ m n : ℕ, ℕ := sorry
+
+def add____ (m : ℕ) : ℕ → ℕ := sorry
+
+inductive ListNat where
+  | nil
+  | cons : ℕ → ListNat -> ListNat
+
+inductive ListBool where
+  | nil
+  | cons : Bool → ListBool -> ListBool
+
+inductive List' (A : Type _) where
+  | nil
+  | cons : A → List' A → List' A
+
+
+#check ListNat.nil
+#check ListNat.cons (.zero) ListNat.nil
+#check ListNat.cons (.succ .zero) ((ListNat.cons (.zero) ListNat.nil))
+
+#check List'.cons (ℕ.zero) List'.nil
+#check List'.cons (Bool.false) List'.nil
+
+#check [1, 2, 3, 4]
+#check 1 :: [2, 3, 4]
+#check (List.cons 1 (List.cons 2 (List.cons 4 (List.cons 4 List.nil))))
+
+def xs := [1, 2, 3, 4]
+def ys := [1, 2, 3, 4, 5]
+
+def listSucc (xs : List Nat) : List Nat :=
+  match xs with
+  | .nil       => .nil
+  | .cons x xs => (Nat.succ x) :: listSucc xs
+
+#eval listSucc [0, 1, 2, 3]
+
+def listSuccSucc (xs : List Nat) : List Nat :=
+  match xs with
+  | .nil       => .nil
+  | .cons x xs => (Nat.succ $ Nat.succ x) :: listSuccSucc xs
+
+
+#eval listSuccSucc [0, 1, 2, 3]
+
+def listNatString (xs : List Nat) : List String :=
+  match xs with
+  | []      => .nil
+  | x :: xs => s!"{x}" :: listNatString xs
+
+#eval listNatString [0, 1, 2, 3, 4]
+
+def map {A B : Type _} (f : A → B) (xs : List A) : List B :=
+  match xs with
+  | .nil       => .nil
+  | .cons x xs => f x :: map f xs
+
+-- (A → B) → List A → List B
+-- (A → B) → (List A → List B)
+
+def newListSuccSucc (xs : List Nat) : List Nat :=
+  map (fun x => Nat.succ (Nat.succ x)) xs
+
+#eval newListSuccSucc [0, 1, 2, 3, 4]
+
+def newListNatString : List Nat → List String :=
+  map (fun x => s!"{x}")
+
+#eval newListNatString [0, 1, 2, 3, 4]
