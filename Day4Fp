@@ -1,0 +1,202 @@
+import Init.Prelude
+
+variable {A B C D : Type _}
+
+def filter_rec : List A -> (A -> Bool) -> List A -> List A :=
+  fun acc pred xs =>
+    match xs with
+    | []      => acc
+    | x :: xs =>
+        if pred x
+          then filter_rec (x :: acc) pred xs
+          else filter_rec       acc  pred xs
+
+def filter : (A -> Bool) -> List A -> List A :=
+  filter_rec []
+
+def foldr : (A -> B -> B) -> B -> List A -> B :=
+  fun f init xs =>
+    match xs with
+    | []      => init
+    | x :: xs => f x (foldr f init xs)
+
+def foldl : (B -> A -> B) -> B -> List A -> B :=
+  fun f acc xs =>
+    match xs with
+    | []      => acc
+    | x :: xs => foldl f (f acc x) xs
+
+def filter' : List A -> (A -> Bool) -> List A :=
+  fun xs pred =>
+    foldr
+      (fun x acc => if pred x then x :: acc else acc)
+      []
+      xs
+
+def cat_nat : List Nat -> String :=
+  foldr (fun x acc => s!"{x}" ++ acc) ""
+
+def cat_nat' : List Nat -> String :=
+  foldl (fun acc x => acc ++ s!"{x}") ""
+
+#eval cat_nat  [0, 1, 2, 3, 4, 5, 6]
+#eval cat_nat' [0, 1, 2, 3, 4, 5, 6]
+
+def mapList : (A -> B) -> (List A -> List B) :=
+  fun f xs =>
+    match xs with
+    | []      => []
+    | x :: xs => f x :: mapList f xs
+
+def unitList : A -> List A :=
+  fun x => [x]
+
+def joinList : List (List A) -> List A :=
+  fun xss =>
+    match xss with
+    | []        => []
+    | xs :: xss => xs ++ joinList xss
+
+def points : List (Nat × Nat) :=
+  let xs := [0, 1, 2, 3, 4 ,5]
+  let ys := [2, 4, 6, 8, 0, 2]
+  joinList $ mapList
+    (fun x => mapList (fun y => (x, y)) ys)
+    xs
+
+#eval points
+
+def points_but : List (Nat × Nat) :=
+    let xs := [0, 1, 2, 3, 4 ,5]
+  let ys := [2, 4, 6, 8, 0, 2]
+  filter (fun (x, y) => x ≠ y) ∘ joinList $ mapList
+    (fun x => mapList (fun y => (x, y)) ys)
+    xs
+
+def bindList : List A -> (A -> List B) -> List B :=
+  fun xs k =>
+    joinList $ mapList k xs
+
+def points' : List (Nat × Nat) :=
+  let xs := [0, 1, 2, 3, 4 ,5]
+  let ys := [2, 4, 6, 8, 0, 2]
+  bindList xs fun x =>
+    bindList ys fun y =>
+      unitList (x, y)
+
+#eval points'
+
+example : points = points' := rfl
+
+inductive Maybe (A : Type _) where
+  | just (x : A) : Maybe A
+  | nothing      : Maybe A
+
+def mapMaybe : (A -> B) -> (Maybe A -> Maybe B) :=
+  fun f xs =>
+    match xs with
+    | .just x  => .just $ f x
+    | .nothing => .nothing
+
+def unitMaybe : A -> Maybe A :=
+  fun x => .just x
+
+def joinMaybe : Maybe (Maybe A) -> Maybe A :=
+  fun xss =>
+    match xss with
+    | .just xs => xs
+    | .nothing => .nothing
+
+def bindMaybe : Maybe A -> (A -> Maybe B) -> Maybe B :=
+  fun xs k =>
+    joinMaybe $ mapMaybe k xs
+
+def computation_may_occur_error_0 : A -> Maybe B := sorry
+def computation_may_occur_error_1 : A -> B -> Maybe B := sorry
+def computation_may_occur_error_2 : B -> B -> Maybe C := sorry
+def computation_may_occur_error_3 : A -> B -> C -> Maybe D := sorry
+
+example (x : A) : Maybe D :=
+  let y0 : Maybe B := computation_may_occur_error_0 x
+  match y0 with
+  | .just y0 =>
+      let y1 := computation_may_occur_error_1 x y0
+      match y1 with
+      | .just y1 =>
+          let z : Maybe C := computation_may_occur_error_2 y0 y1
+          match z with
+          | .just z  => computation_may_occur_error_3 x y1 z
+          | .nothing => .nothing
+      | .nothing => .nothing
+  | .nothing => .nothing
+
+example (x : A) : Maybe D :=
+  bindMaybe (computation_may_occur_error_0 x) fun y0 =>
+    bindMaybe (computation_may_occur_error_1 x y0 : Maybe B) fun y1 =>
+      bindMaybe (computation_may_occur_error_2 y0 y1 : Maybe C) fun z =>
+        computation_may_occur_error_3 x y1 z
+
+instance : Functor Maybe where
+  map := mapMaybe
+
+instance : Monad Maybe where
+  pure := unitMaybe
+  bind := bindMaybe
+
+example (x : A) : Maybe D := do
+  let y0 <- computation_may_occur_error_0 x
+  let y1 : Maybe B <- computation_may_occur_error_1 x y0
+  let z  : Maybe D <- computation_may_occur_error_2 y0 y1
+  computation_may_occur_error_3 x y1 z
+
+example (x : A) : Maybe D := do
+  let y0 <- computation_may_occur_error_0 x
+  let y1 : Maybe B <- computation_may_occur_error_1 x y0
+  let z  : Maybe D <- computation_may_occur_error_2 y0 y1
+  let x <- computation_may_occur_error_3 x y1 z
+  return x
+
+instance : Monad List where
+  map  := mapList
+  pure := unitList
+  bind := bindList
+
+def points'' : List (Nat × Nat) := do
+  let x <- [0, 1, 2, 3, 4 ,5]
+  let y <- [2, 4, 6, 8, 0, 2]
+  return (x, y)
+
+example : points' = points'' := rfl
+
+inductive State' (S : Type _) : Type _ -> Type _ where
+  | get : State' S S
+  | put : S -> State' S Unit
+  | pure : {A : Type _} -> A -> State' S A
+  | bind : {A : Type _} -> {B : Type _}
+        -> State' S A
+        -> (A -> State' S B)
+        -> State' S B
+
+instance {S : Type _} : Monad (State' S) where
+  pure := State'.pure
+  bind := State'.bind
+
+def runState {S A : Type _} : S -> State' S A -> A × S :=
+  fun init xs =>
+    match xs with
+    | .get => (init, init)
+    | .put st => ((), st)
+    | .pure x => (x, init)
+    | .bind xs k =>
+        let ⟨x, st⟩ := runState init xs
+        runState st (k x)
+
+def prog0 : State' String String := do
+  let s0 <- .get
+  let s1 := "before " ++ s0
+  .put s1
+  let s2 := State'.get
+  let s3 <- (· ++ " after") <$> s2
+  return s3
+
+#eval runState "__init__" prog0
